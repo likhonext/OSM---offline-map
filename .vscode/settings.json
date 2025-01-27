@@ -1,0 +1,9 @@
+{
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "@ionic/angular/common",
+    "@ionic/angular"
+  ],
+  "editor.tabCompletion": "on",
+  "diffEditor.codeLens": true,
+  "MutableAI.upsell": false
+}

@@ -1,0 +1,5 @@
+/* Add these styles to ensure the map container has a height */
+.map-container {
+	height: 100vh;
+	width: 100%;
+}
