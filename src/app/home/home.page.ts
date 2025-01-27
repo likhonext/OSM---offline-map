@@ -91,5 +91,10 @@ export class HomePage implements OnInit {
       fillOpacity: 0.5,
     });
     this.map.addLayer(polygon);
+    
+    // Current polygon - Center Lat and Lng 
+    const centroids = polygon.getBounds().getCenter();
+    // The Marker add to the map based on centroid - lat and lng
+    L.marker(centroids).addTo(this.map);
   }
 }
