@@ -32,6 +32,23 @@ export class HomePage implements OnInit {
     document.head.appendChild(link);
     setTimeout(() => this.initMap(), 100);
     setTimeout(() => this.drawPolygon(), 100);
+
+    // Reload based Status Show in console
+    if (navigator.onLine) {
+      console.log('Online');
+    } else {
+      console.log('Offline');
+    }
+    // Reload based Status Show in console
+
+    // Status Show in Console - When Network gone
+    window.addEventListener('online', () => {
+      console.log('going to online');
+    });
+    window.addEventListener('offline', () => {
+      console.log('going to offline');
+    });
+    // Status Show in Console - When Network gone
   }
 
   private initMap(): void {
@@ -55,7 +72,7 @@ export class HomePage implements OnInit {
 
     const saveTilesButton = document.querySelector('a.savetiles');
 
-    // From DOM Element - Removing the Remove tiles Button
+    // From DOM Element - Removing the Delete tiles Button
     const deleteTilesButton = document.querySelector('a.rmtiles');
     (deleteTilesButton as HTMLElement).style.display = 'none';
 
@@ -91,8 +108,8 @@ export class HomePage implements OnInit {
       fillOpacity: 0.5,
     });
     this.map.addLayer(polygon);
-    
-    // Current polygon - Center Lat and Lng 
+
+    // Current polygon - Center Lat and Lng
     const centroids = polygon.getBounds().getCenter();
     // The Marker add to the map based on centroid - lat and lng
     L.marker(centroids).addTo(this.map);
