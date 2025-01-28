@@ -8,7 +8,8 @@ import {
 import * as L from 'leaflet';
 import 'leaflet.offline';
 import * as localforage from 'localforage';
-
+import 'leaflet-draw';
+import { GeometryGroup } from 'three';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -18,6 +19,7 @@ import * as localforage from 'localforage';
 })
 export class HomePage implements OnInit {
   private map: L.Map;
+  private drawnItems = L.featureGroup();
   private centroid: L.LatLngExpression = [-1.292066, 36.821945];
 
   /*
@@ -31,7 +33,8 @@ export class HomePage implements OnInit {
     link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
     document.head.appendChild(link);
     setTimeout(() => this.initMap(), 100);
-    setTimeout(() => this.drawPolygon(), 100);
+    // setTimeout(()=> this.initDrawingTools(),100)
+    setTimeout(() => this.initDrawingTools(), 100);
 
     // Reload based Status Show in console
     if (navigator.onLine) {
@@ -52,14 +55,18 @@ export class HomePage implements OnInit {
   }
 
   private initMap(): void {
-    this.map = L.map('map').setView(this.centroid, 13);
+    this.map = L.map('map', {
+      doubleClickZoom: false, // Disable double-click zoom
+    }).setView(this.centroid, 13);
     // Create offline tile layer with caching
+
     const offlineLayer = (L.tileLayer as any)
       .offline(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         localforage
       )
       .addTo(this.map);
+
     // Added controls for manual cache management
     const control = (L as any).control.savetiles(offlineLayer, {
       zoomlevels: [12, 16], // Range
@@ -83,35 +90,59 @@ export class HomePage implements OnInit {
       (saveTilesButton as HTMLElement).style.width = '100px';
       (saveTilesButton as HTMLElement).style.fontSize = '16px';
       (saveTilesButton as HTMLElement).textContent = 'Save';
-
-      // Button Hover Effect - Start
       saveTilesButton.addEventListener('mouseenter', () => {
         (saveTilesButton as HTMLElement).style.backgroundColor = '#2A8B76';
       });
       saveTilesButton.addEventListener('mouseleave', () => {
         (saveTilesButton as HTMLElement).style.backgroundColor = '#3CB4AA';
       });
-      // Button Hover Effect - End
     }
   }
-  // Added Custom Polygon to Nairobi
-  private drawPolygon(): void {
-    const polygonCoordinates: L.LatLngExpression[] = [
-      [-1.292, 36.821],
-      [-1.293, 36.822],
-      [-1.294, 36.82],
-      [-1.292, 36.819],
-    ];
-    const polygon = new L.Polygon(polygonCoordinates, {
-      color: 'blue',
-      fillColor: 'lightblue',
-      fillOpacity: 0.5,
-    });
-    this.map.addLayer(polygon);
 
-    // Current polygon - Center Lat and Lng
-    const centroids = polygon.getBounds().getCenter();
-    // The Marker add to the map based on centroid - lat and lng
-    L.marker(centroids).addTo(this.map);
+
+  private initDrawingTools() {
+    // Configure draw controls
+    const customVertex = L.divIcon({
+      className: 'custom-vertex', // Custom CSS class
+      iconSize: [15, 15], // Size of the vertex
+      html: '<div style="background-color: #007bff; width: 15px; height: 15px; border-radius: 50%;"></div>',
+    });
+    const drawControl = new L.Control.Draw({
+      draw: {
+        polygon: {
+          allowIntersection: true,
+          showArea: true,
+          shapeOptions: {
+            color: 'blue',
+          },
+          icon: customVertex,
+        },
+        circle: false,
+        rectangle: false,
+        marker: false,
+        polyline: false,
+      },
+      edit: {
+        featureGroup: this.drawnItems,
+        remove: true,
+      },
+    });
+
+    // Add controls to map
+    this.map.addControl(drawControl);
+
+    // Handle drawing events
+    this.map.on(L.Draw.Event.CREATED, (e: any) => this.handleLayerCreated(e));
+  }
+
+
+  private handleLayerCreated(e: any) {
+    const layer = e.layer;
+    this.drawnItems.addLayer(layer);
+    this.savePolygon(layer.toGeoJSON());
+  }
+
+  private savePolygon(geoJson: any) {
+    console.log("geoJson: ", geoJson.geometry.coordinates);
   }
 }
