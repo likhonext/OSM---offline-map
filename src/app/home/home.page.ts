@@ -33,6 +33,7 @@ export class HomePage implements OnInit {
     link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
     document.head.appendChild(link);
     setTimeout(() => this.initMap(), 100);
+    setTimeout(() => this.drawPolygonFromLocalStorage(), 200);
     // setTimeout(()=> this.initDrawingTools(),100)
     setTimeout(() => this.initDrawingTools(), 100);
 
@@ -99,7 +100,6 @@ export class HomePage implements OnInit {
     }
   }
 
-
   private initDrawingTools() {
     // Configure draw controls
     const customVertex = L.divIcon({
@@ -135,14 +135,37 @@ export class HomePage implements OnInit {
     this.map.on(L.Draw.Event.CREATED, (e: any) => this.handleLayerCreated(e));
   }
 
-
   private handleLayerCreated(e: any) {
+    console.log(e);
     const layer = e.layer;
     this.drawnItems.addLayer(layer);
-    this.savePolygon(layer.toGeoJSON());
+    this.createPolygonShow(layer.editing.latlngs[0]);
+    localStorage.setItem('polygons', JSON.stringify(layer.editing.latlngs[0]));
   }
 
-  private savePolygon(geoJson: any) {
-    console.log("geoJson: ", geoJson.geometry.coordinates);
+  private createPolygonShow(latLngs: any) {
+    const polygon = new L.Polygon(latLngs, {
+      color: 'blue',
+      weight: 3,
+      fillColor: 'lightblue',
+      fillOpacity: 0.5,
+    }).addTo(this.map);
+  }
+
+  async drawPolygonFromLocalStorage(): Promise<void> {
+    const polygons = localStorage.getItem('polygons');
+
+    if (polygons) {
+      console.log(JSON.parse(polygons));
+
+      const polygon = new L.Polygon(JSON.parse(polygons), {
+        color: 'blue',
+        weight: 3,
+        fillColor: 'lightblue',
+        fillOpacity: 0.5,
+      }).addTo(this.map);
+    } else {
+      console.log('No polygons found in localStorage');
+    }
   }
 }
